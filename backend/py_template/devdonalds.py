@@ -28,7 +28,8 @@ class Ingredient(CookbookEntry):
 app = Flask(__name__)
 
 # Store your recipes here!
-cookbook = None
+# Change `cookbook = None` into `cookbook = []`
+cookbook = []
 
 # Task 1 helper (don't touch)
 @app.route("/parse", methods=['POST'])
@@ -44,6 +45,23 @@ def parse():
 # Takes in a recipeName and returns it in a form that 
 def parse_handwriting(recipeName: str) -> Union[str | None]:
 	# TODO: implement me
+	# 1: Return None if the string is empty
+	if len(recipeName) == 0:
+		return None
+
+	# 2: Replace hyphens and underscores with whitespace
+	recipeName = re.sub(r'[-_]+', ' ', recipeName)
+	
+	# 3: Contain only letters and whitespace; remove any other characters
+	recipeName = re.sub(r'[^a-zA-Z\s]', '', recipeName)
+
+	# 4: Capitalise the first letter of each word
+	recipeName = recipeName.title()
+
+	# 5: Only one whitespace between words
+	recipeName = re.sub(r'\s+', ' ', recipeName).strip()
+
+	# Return the result
 	return recipeName
 
 
@@ -51,8 +69,28 @@ def parse_handwriting(recipeName: str) -> Union[str | None]:
 # Endpoint that adds a CookbookEntry to your magical cookbook
 @app.route('/entry', methods=['POST'])
 def create_entry():
-	# TODO: implement me
-	return 'not implemented', 500
+	entry = request.get_json()
+
+	# 1: Type can only be "recipe" or "ingredient"
+	if entry.get('type') != 'recipe' and entry.get('type') != 'ingredient':
+		return jsonify({'error': 'Invalid entry type'}), 400
+
+	# 2: cookTime must be greater than or equal to 0
+	if entry.get('type') == 'ingredient' and entry.get('cookTime', -1) < 0:
+		return jsonify({'error': 'Invalid cookTime'}), 400
+
+	# 3: Name must be unique
+	for element in cookbook:
+		if element.get('name') == entry.get('name'):
+			return jsonify({'error': 'Invalid entry name'}), 400
+
+	# 4: RequiredItems can only have one element per name
+	if entry.get('type') == 'recipe' and len(entry.get('requiredItems', [])) > 1:
+		return jsonify({'error': 'Invalid entry requiredItems'}), 400
+
+	# Add the entry to the cookbook
+	cookbook.append(entry)
+	return jsonify({}), 200
 
 
 # [TASK 3] ====================================================================
