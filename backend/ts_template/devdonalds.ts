@@ -110,21 +110,45 @@ app.get("/summary", (req:Request, res:Request) => {
   // TODO: implement me
   const name = req.query.name as string;
 
+  // Obtain the one entry with the corresponding name
+  const entry = cookbook.find(element => element.name === name);
+
   // 1: A recipe with the corresponding name cannot be found
-  if (!cookbook.some(element => element.name === name && element.type === "recipe")) {
+  if (!entry) {
     return res.status(400).json({ error: "Recipe not found" });
   }
 
   // 2: The searched name is NOT a recipe name (ie. an ingredient)
-  if (cookbook.some(element => element.name === name && element.type === "ingredient")) {
+  if (entry.type === 'ingredient') {
     return res.status(400).json({ error: "Searched name is not a recipe name" });
   }
 
+  /** NOTE: 
+   * I couldn't implement a recursive function because I forgot how they worked D:
+   * But was thinking of doing a map of each requiredItems that checks if items are of type 'recipe' or 'ingredients'
+   * If type 'recipe', then parse the name of the recipe and quantity to the helper function again.
+   * If type 'ingredients', then multiply quantity and save the name and total quantity to the result via pushing. 
+  */
+
+  // const result = [];
+
+  // // Recursive function
+  // const getToBaseIngredients = (name: string, quantity: number) => {
+  //   let input = cookbook.find(element => element.name === name)
+  //   input.map(item => {
+  //     if (input.type === 'ingredients') {
+
+  //     } else if (input.type === 'recipe') {
+
+  //     }
+  //   })
+  // }
+
   // 3: The recipe contains recipes or ingredients that aren't in the cookbook
-  if (cookbook.some(element => element.name === name && element.type === "recipe" && 
-    element.requiredItems.some(item => !cookbook.some(e => e.name === item.name && e.type === "ingredient")))) {
-    return res.status(400).json({ error: "Recipe contains ingredients that aren't in the cookbook" });
-  }
+  // if (cookbook.some(element => element.name === name && element.type === "recipe" && 
+  //   element.requiredItems.some(item => !cookbook.some(e => e.name === item.name && e.type === "ingredient")))) {
+  //   return res.status(400).json({ error: "Recipe contains ingredients that aren't in the cookbook" });
+  // }  
 
   res.status(200);
 });
