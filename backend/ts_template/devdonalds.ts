@@ -136,15 +136,17 @@ app.get("/summary", (req:Request, res:Request) => {
       // 3: The recipe contains recipes or ingredients that aren't in the cookbook
       return res.status(400).json({ error: "Recipe contains ingredients that aren't in the cookbook" });
     } else if (input.type === 'ingredient') {
-      // Push the object to the result array, having multiplied the cookTime by quantity
+      // Sum the total cook time
+      totalCookTime = totalCookTime + input.cookTime;
+      
+      // Save ingredient object to result array
       result.push({
         name: input.name, 
         quantity: quantity
       })
     } else if (input.type === 'recipe') {
-      // Map through each ingredient of recipe
+      // Map through each ingredient of recipe; multiplying quantity
       input.requiredItems.map(item => {
-        totalCookTime = totalCookTime + input.cookTime;
         getToBaseIngredients(item.name, item.quantity * quantity);
       })
     }
