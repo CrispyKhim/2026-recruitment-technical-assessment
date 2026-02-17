@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import { resourceLimits } from "worker_threads";
 
 // ==== Type Definitions, feel free to add or modify ==========================
 interface cookbookEntry {
@@ -107,11 +108,13 @@ app.post("/entry", (req:Request, res:Response) => {
 // [TASK 3] ====================================================================
 // Endpoint that returns a summary of a recipe that corresponds to a query name
 app.get("/summary", (req:Request, res:Request) => {
-  // TODO: implement me
-  const name = req.query.name as string;
+  const name = req.query.name as string | undefined;
+  if (!name) {
+    return res.status(400).json({ error: "Recipe not found" });
+  }
 
   // Obtain the one entry with the corresponding name
-  const entry = cookbook.find(element => element.name === name);
+  const entry = cookbook.find((element: any) => element?.name === name);
 
   // 1: A recipe with the corresponding name cannot be found
   if (!entry) {
@@ -119,38 +122,43 @@ app.get("/summary", (req:Request, res:Request) => {
   }
 
   // 2: The searched name is NOT a recipe name (ie. an ingredient)
-  if (entry.type === 'ingredient') {
+  if (entry.type === "ingredient") {
     return res.status(400).json({ error: "Searched name is not a recipe name" });
   }
 
-  /** NOTE: 
-   * I couldn't implement a recursive function because I forgot how they worked D:
-   * But was thinking of doing a map of each requiredItems that checks if items are of type 'recipe' or 'ingredients'
-   * If type 'recipe', then parse the name of the recipe and quantity to the helper function again.
-   * If type 'ingredients', then multiply quantity and save the name and total quantity to the result via pushing. 
-  */
+  let result = [];
+    
+  // Recursive function
+  const getToBaseIngredients = (name: string, quantity: number) => {
+    let input = cookbook.find(element => element.name === name);
+    if (input === undefined) {
+      // 3: The recipe contains recipes or ingredients that aren't in the cookbook
+      return res.status(400).json({ error: "Recipe contains ingredients that aren't in the cookbook" });
+    } else if (input.type === 'ingredient') {
+      // Push the object to the result array, having multiplied the cookTime by quantity
+      result.push({
+        name: input.name, 
+        cookTime: input.cookTime * quantity
+      })
+    } else if (input.type === 'recipe') {
+      // Map through each ingredient of recipe
+      input.requiredItems.map(item => {
+        getToBaseIngredients(item.name, item.quantity * quantity);
+      })
+    }
+  }
 
-  // const result = [];
+  // Call the first entry to the recursive function
+  getToBaseIngredients(entry.name, 1);
 
-  // // Recursive function
-  // const getToBaseIngredients = (name: string, quantity: number) => {
-  //   let input = cookbook.find(element => element.name === name)
-  //   input.map(item => {
-  //     if (input.type === 'ingredients') {
-
-  //     } else if (input.type === 'recipe') {
-
-  //     }
-  //   })
-  // }
-
-  // 3: The recipe contains recipes or ingredients that aren't in the cookbook
-  // if (cookbook.some(element => element.name === name && element.type === "recipe" && 
-  //   element.requiredItems.some(item => !cookbook.some(e => e.name === item.name && e.type === "ingredient")))) {
-  //   return res.status(400).json({ error: "Recipe contains ingredients that aren't in the cookbook" });
-  // }  
-
-  res.status(200);
+  // Return result in specified format from README
+  res.status(200).json({
+    name: entry.name,
+    cookTime: result.reduce((acc, curr) => {
+      acc + curr.cookTime
+    }, 0),
+    ingredients: result
+  });
 });
 
 // =============================================================================
