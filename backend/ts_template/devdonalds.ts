@@ -127,6 +127,7 @@ app.get("/summary", (req:Request, res:Request) => {
   }
 
   let result = [];
+  let totalCookTime = 0;
     
   // Recursive function
   const getToBaseIngredients = (name: string, quantity: number) => {
@@ -138,11 +139,12 @@ app.get("/summary", (req:Request, res:Request) => {
       // Push the object to the result array, having multiplied the cookTime by quantity
       result.push({
         name: input.name, 
-        cookTime: input.cookTime * quantity
+        quantity: quantity
       })
     } else if (input.type === 'recipe') {
       // Map through each ingredient of recipe
       input.requiredItems.map(item => {
+        totalCookTime = totalCookTime + input.cookTime;
         getToBaseIngredients(item.name, item.quantity * quantity);
       })
     }
@@ -154,9 +156,7 @@ app.get("/summary", (req:Request, res:Request) => {
   // Return result in specified format from README
   res.status(200).json({
     name: entry.name,
-    cookTime: result.reduce((acc, curr) => {
-      acc + curr.cookTime
-    }, 0),
+    cookTime: totalCookTime,
     ingredients: result
   });
 });
