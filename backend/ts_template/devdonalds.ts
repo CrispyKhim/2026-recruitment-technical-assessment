@@ -94,9 +94,18 @@ app.post("/entry", (req:Request, res:Response) => {
     return res.status(400).json({ error: "Invalid entry name" });
   }
 
-  // 4: RequiredItems can only have one element per name
-  if (entry.type === "recipe" && entry.requiredItems.length > 1) {
-    return res.status(400).json({ error: "Invalid entry requiredItems" });
+  // 4: RequiredItems has no duplicate names (UNIQUE)
+  if (entry.type === "recipe") {
+    // Obtain only the names of requiredItems
+    const itemNames = entry.requiredItems.map(item => item.name);
+    
+    // Create a set that removes duplicate entries
+    const uniqueNames = new Set(itemNames);
+
+    // If length differs, there exists a duplicate entry
+    if (itemNames.length !== uniqueNames.size) {
+      return res.status(400).json({ error: "Invalid entry requiredItems" });
+    }
   }
 
   // Add the entry to the cookbook
