@@ -1,5 +1,4 @@
 import express, { Request, Response } from "express";
-import { resourceLimits } from "worker_threads";
 
 // ==== Type Definitions, feel free to add or modify ==========================
 interface cookbookEntry {
@@ -28,7 +27,7 @@ app.use(express.json());
 
 // Store your recipes here!
 // Changed any to any[] and null to []; const cookbook: any = null;
-const cookbook: any[] = [];
+const cookbook = [];
 
 // Task 1 helper (don't touch)
 app.post("/parse", (req:Request, res:Response) => {
@@ -126,18 +125,18 @@ app.get("/summary", (req:Request, res:Request) => {
     return res.status(400).json({ error: "Searched name is not a recipe name" });
   }
 
-  let result = [];
+  const result = [];
   let totalCookTime = 0;
     
   // Recursive function
   const getToBaseIngredients = (name: string, quantity: number) => {
-    let input = cookbook.find(element => element.name === name);
+    const input = cookbook.find(element => element.name === name);
     if (input === undefined) {
       // 3: The recipe contains recipes or ingredients that aren't in the cookbook
       return res.status(400).json({ error: "Recipe contains ingredients that aren't in the cookbook" });
     } else if (input.type === 'ingredient') {
-      // Sum the total cook time
-      totalCookTime = totalCookTime + input.cookTime;
+      // Sum the total cook time with new cook time multiplied by quantity
+      totalCookTime = totalCookTime + (input.cookTime * quantity);
 
       // Check if the ingredient object is already in the result array
       const existingIngredient = result.find(item => item.name === input.name);
