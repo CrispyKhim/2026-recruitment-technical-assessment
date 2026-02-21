@@ -157,5 +157,120 @@ describe("Task 3", () => {
       const resp3 = await getTask3("Skibidi");
       expect(resp3.status).toBe(200);
     });
+
+    // NEW TEST CASE FROM BACKEND README FILE
+    it("Success", async () => {
+      /** Upload recipes to cookbook */
+      const skibidi = {
+        type: "recipe",
+        name: "Skibidi Spaghetti",
+        requiredItems: [
+          {
+            name: "Meatball",
+            quantity: 3
+          }, {
+            name: "Pasta",
+            quantity: 1
+          }, {
+            name: "Tomato",
+            quantity: 2
+          }
+        ]
+      }
+      const resp1 = await postEntry(skibidi);
+      expect(resp1.status).toBe(200);
+
+      const meatball = {
+        type: "recipe",
+        name: "Meatball",
+        requiredItems: [
+          {
+            name: "Beef",
+            quantity: 2
+          },
+          {
+            name: "Egg",
+            quantity: 1
+          }
+        ]
+      }
+      const resp2 = await postEntry(meatball);
+      expect(resp2.status).toBe(200);
+
+      const pasta = {
+        type: "recipe",
+        name: "Pasta",
+        requiredItems: [
+          {
+            name: "Flour",
+            quantity: 3
+          },
+          {
+            name: "Egg",
+            quantity: 1
+          }
+        ]
+      }
+      const resp3 = await postEntry(pasta);
+      expect(resp3.status).toBe(200);
+
+
+      /** Upload ingredients to cookbook */
+      const resp4 = await postEntry({
+        type: "ingredient",
+        name: "Beef",
+        cookTime: 5,
+      });
+      expect(resp4.status).toBe(200);
+      
+      const resp5 = await postEntry({
+        type: "ingredient",
+        name: "Egg",
+        cookTime: 3,
+      });
+      expect(resp5.status).toBe(200);
+
+      const resp6 = await postEntry({
+        type: "ingredient",
+        name: "Flour",
+        cookTime: 0,
+      });
+      expect(resp6.status).toBe(200);
+
+      const resp7 = await postEntry({
+        type: "ingredient",
+        name: "Tomato",
+        cookTime: 2,
+      });
+      expect(resp7.status).toBe(200);
+
+
+      /** Find the base ingredients for Skibidi Spaghetti */
+      const resp8 = await getTask3("Skibidi Spaghetti");
+      expect(resp8.status).toBe(200);
+      // note: the order does NOT matter
+      expect(resp8.body).toStrictEqual({
+        name: "Skibidi Spaghetti",
+        cookTime: 46,
+        ingredients: [
+          {
+            name: "Beef",
+            quantity: 6
+          },
+          {
+            name: "Egg",
+            quantity: 4
+          },
+          {
+            name: "Flour",
+            quantity: 3
+          },
+          {
+            name: "Tomato",
+            quantity: 2
+          }
+        ]
+      })
+    })
   });
 });
