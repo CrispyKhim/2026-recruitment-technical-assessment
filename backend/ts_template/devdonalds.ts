@@ -114,7 +114,7 @@ app.get("/summary", (req:Request, res:Request) => {
   }
 
   // Obtain the one entry with the corresponding name
-  const entry = cookbook.find((element: any) => element?.name === name);
+  const entry = cookbook.find(element => element.name === name);
 
   // 1: A recipe with the corresponding name cannot be found
   if (!entry) {
@@ -138,12 +138,19 @@ app.get("/summary", (req:Request, res:Request) => {
     } else if (input.type === 'ingredient') {
       // Sum the total cook time
       totalCookTime = totalCookTime + input.cookTime;
-      
-      // Save ingredient object to result array
-      result.push({
-        name: input.name, 
-        quantity: quantity
-      })
+
+      // Check if the ingredient object is already in the result array
+      const existingIngredient = result.find(item => item.name === input.name);
+      if (existingIngredient) {
+        // If it exists, sum up the quantity
+        existingIngredient.quantity += quantity;
+      } else {
+        // If it doesn't exist, save ingredient object to result array
+        result.push({
+          name: input.name, 
+          quantity: quantity
+        })
+      }
     } else if (input.type === 'recipe') {
       // Map through each ingredient of recipe; multiplying quantity
       input.requiredItems.map(item => {
